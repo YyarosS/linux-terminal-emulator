@@ -7,22 +7,23 @@
 
 namespace filesystem = std::filesystem;
 
-void parseSystem(char* variable)
+char* parseSystem(char* variable)
 {
     char* variableValue = getenv(variable);
-    std::cout<<variableValue<<std::endl;
+    return variableValue;
 }
-void checkSystemVariable(char* variable)
+bool checkSystemVariable(char* variable)
 {
     char* posibleVariable = getenv(variable);
 
     if ( posibleVariable == NULL)
     {
-        std::cout<<"Данная переменная не была найдена в системе"<<std::endl;
-    }
-    else
+        std::cout<<""<<std::endl;
+        return false;
+
+    }else
     {
-        parseSystem(variable);
+        return true;
     }
 }
 std::string trim(const std::string& str) {
@@ -34,10 +35,28 @@ std::string trim(const std::string& str) {
 }
 void printCommandWithArguments( std::string command, std::string arguments)
 {
+    arguments = trim(arguments);
+    
     if (!arguments.empty())
     {
-        std::cout<<"Команда "<<command<<" имеет аргументы: ";
-        std::cout<<arguments<<std::endl;
+        if(arguments.front() == '$')
+        {
+            arguments.erase(0,1);
+            char* variable =  arguments.data();
+            if (checkSystemVariable(variable))
+            {
+                variable = parseSystem(variable);
+                std::cout<<"Команда "<<command<<" имеет аргументы: "<<variable<<std::endl;
+            }
+            else
+            {
+                std::cout<<"Команда "<<command<<" не имеет таких аргумент, такой системной переменной не существует."<<std::endl;
+            }
+        }else
+        {
+            std::cout<<"Команда "<<command<<" имеет аргументы: ";
+            std::cout<<arguments<<std::endl;
+        }
     }
     else
     {
@@ -79,6 +98,8 @@ std::vector<std::string> getCommandAndArguments(std::string& executeLine, int li
     return commandAndArguments;
 }
 void systemInvite(){
+    // std::string vfsDirectory = "VFS";
+    // std::string logDirectory = "logs";
     std::string homeDirectory = getenv("HOME");
     const std::string GREEN = "\033[32m";
     const std::string RESET = "\033[0m";
@@ -107,11 +128,14 @@ void executeCommand(std::string executeLine, bool& whileLife)
     {
         command.erase(0,1);
         char* variable =  command.data();
-        checkSystemVariable(variable);
+        if (checkSystemVariable(variable))
+        {
+            std::cout<<parseSystem(variable)<<std::endl;
+        }
     }
     else
     {
-        std::cout<<"Команда не найдена или не существует."<<std::endl;
+        std::cout<<"Команда "<<command<<" не найдена или не существует."<<std::endl;
     }
 
 }
